@@ -2,7 +2,13 @@ import React, { useState } from 'react';
 import { ARENA_THEMES, ArenaTheme } from '../../types/themes';
 import { ArenaVisualCard } from '../ArenaVisualCard';
 import { sounds } from '../../services/soundEffects';
-import { ArrowRight, ArrowLeft, Play, MapPin, Sparkles } from 'lucide-react';
+import {
+  getUserCoins,
+  addCoins,
+  getUnlockedThemes,
+  unlockTheme,
+} from '../../services/storage';
+import { ArrowRight, ArrowLeft, Play, MapPin, Sparkles, Coins, ShoppingBag } from 'lucide-react';
 
 interface Props {
   initialTheme: ArenaTheme;
@@ -18,11 +24,35 @@ export const ThemeSelectionPage: React.FC<Props> = ({
   onStartMatch,
 }) => {
   const [selected, setSelected] = useState<ArenaTheme>(initialTheme);
+  const [coins, setCoins] = useState<number>(getUserCoins());
+  const [unlockedThemes, setUnlockedThemes] = useState<string[]>(getUnlockedThemes());
+  const [notification, setNotification] = useState<string | null>(null);
 
   const handleSelect = (theme: ArenaTheme) => {
     sounds.playClick();
     setSelected(theme);
     onSelectTheme(theme);
+  };
+
+  const handleBuyTheme = (theme: ArenaTheme) => {
+    if (coins >= theme.cost) {
+      sounds.playCoin();
+      sounds.playExclusiveSparkle();
+      const nextCoins = addCoins(-theme.cost);
+      unlockTheme(theme.id);
+      setCoins(nextCoins);
+      setUnlockedThemes(getUnlockedThemes());
+      setSelected(theme);
+      onSelectTheme(theme);
+      setNotification(`Berhasil membeli arena "${theme.name}" (-${theme.cost} Koin)!`);
+      setTimeout(() => setNotification(null), 3000);
+    } else {
+      sounds.playWrongBuzz();
+      setNotification(
+        `Koinmu tidak mencukupi! Butuh ${theme.cost} koin (Koinmu: ${coins}). Dapatkan koin dari mini game kucing atau selesaikan persamaan!`
+      );
+      setTimeout(() => setNotification(null), 4000);
+    }
   };
 
   const handleStart = () => {
@@ -33,8 +63,8 @@ export const ThemeSelectionPage: React.FC<Props> = ({
 
   return (
     <div className="flex-1 w-full max-w-6xl mx-auto flex flex-col justify-between p-4 z-10 animate-fadeIn">
-      {/* Header */}
-      <div className="w-full flex items-center justify-between pb-3 border-b border-slate-800">
+      {/* Header with Coin Counter */}
+      <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-800 gap-2">
         <div className="flex items-center gap-2">
           <span className="w-7 h-7 rounded-xl bg-cyan-500 text-slate-950 font-black flex items-center justify-center text-xs font-mono">
             4
@@ -43,26 +73,45 @@ export const ThemeSelectionPage: React.FC<Props> = ({
             <h2 className="text-lg md:text-xl font-bold font-fun text-white flex items-center gap-2">
               <span>Langkah 4: Pilih Tempat &amp; Arena Permainan</span>
               <span className="text-xs font-normal text-cyan-400 bg-cyan-950/80 px-2.5 py-0.5 rounded-full border border-cyan-500/30">
-                Gambar Panorama 3D
+                Peta Beli dengan Koin
               </span>
             </h2>
             <p className="text-xs text-slate-400">
-              Lihat gambaran pemandangan visual unik dari masing-masing arena pertandingan domino
+              Pilih arena bawaan gratis atau buka arena eksklusif mewah menggunakan koin kamu
             </p>
+          </div>
+        </div>
+
+        {/* User Coin Balance */}
+        <div className="flex items-center gap-2 self-start sm:self-center">
+          <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl bg-amber-500/20 border border-amber-500/50 text-amber-300 font-black text-xs shadow-md">
+            <Coins className="w-4 h-4 text-amber-400" />
+            <span>{coins} Koin</span>
           </div>
         </div>
       </div>
 
-      {/* Visual Arena Cards Grid (Rich Visual Illustrations) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 my-6">
+      {/* Floating Notification */}
+      {notification && (
+        <div className="w-full mt-3 p-2.5 bg-gradient-to-r from-cyan-950 to-indigo-950 border border-cyan-400/60 rounded-xl text-center text-xs text-cyan-200 font-bold shadow-lg animate-fadeIn">
+          {notification}
+        </div>
+      )}
+
+      {/* Visual Arena Cards Grid (6 Arenas: 1 Free + 5 Purchasable) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 my-5">
         {ARENA_THEMES.map((theme) => {
           const isSelected = selected.id === theme.id;
+          const isUnlocked = theme.cost === 0 || unlockedThemes.includes(theme.id);
+
           return (
             <ArenaVisualCard
               key={theme.id}
               theme={theme}
               isSelected={isSelected}
+              isUnlocked={isUnlocked}
               onClick={() => handleSelect(theme)}
+              onBuy={() => handleBuyTheme(theme)}
             />
           );
         })}
@@ -100,7 +149,7 @@ export const ThemeSelectionPage: React.FC<Props> = ({
       <div className="w-full flex items-center justify-between pt-4 border-t border-slate-800">
         <button
           onClick={onBack}
-          className="px-6 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm flex items-center gap-2"
+          className="px-6 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm flex items-center gap-2 cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Kembali ke Level</span>

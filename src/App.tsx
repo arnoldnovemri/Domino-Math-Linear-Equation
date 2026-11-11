@@ -140,21 +140,45 @@ export default function App() {
     setPhase('playing');
   };
 
-  // Game Over Handler
+  // Game Over Handler with Rank-Based Coin Rewards
   const handleGameOver = (
     winner: Player,
     finalPlayers: Player[],
     isDeadlock: boolean
   ) => {
     sounds.stopTenseBGM();
-    sounds.playVictory();
 
-    const isHumanWin = winner.type === 'human';
-    if (isHumanWin) {
-      addCoins(200);
+    // Sort to determine exact rank 1 to 4
+    const rankedPlayers = [...finalPlayers].sort((a, b) => {
+      if (a.id === winner.id) return -1;
+      if (b.id === winner.id) return 1;
+      if (a.cards.length !== b.cards.length) {
+        return a.cards.length - b.cards.length;
+      }
+      const sumA = a.cards.reduce((acc, c) => acc + c.leftVal + c.rightVal, 0);
+      const sumB = b.cards.reduce((acc, c) => acc + c.leftVal + c.rightVal, 0);
+      return sumA - sumB;
+    });
+
+    const humanRankIdx = rankedPlayers.findIndex((p) => p.type === 'human');
+    const humanRank = humanRankIdx !== -1 ? humanRankIdx + 1 : 4;
+
+    // Rule: Juara 1: +250, Juara 2: +150, Juara 3: +75, Juara 4: 0 Koin
+    let earnedCoins = 0;
+    if (humanRank === 1) earnedCoins = 250;
+    else if (humanRank === 2) earnedCoins = 150;
+    else if (humanRank === 3) earnedCoins = 75;
+    else if (humanRank === 4) earnedCoins = 0; // Juara 4 tidak mendapatkan koin
+
+    if (earnedCoins > 0) {
+      addCoins(earnedCoins);
       setCoins(getUserCoins());
+      sounds.playVictory();
+    } else {
+      sounds.playPass();
     }
-    updateStats(isHumanWin);
+
+    updateStats(humanRank === 1);
 
     setGameOverData({
       winner,
@@ -326,6 +350,7 @@ export default function App() {
           players={activePlayers}
           theme={selectedTheme}
           difficulty={difficulty}
+          gameMode={gameMode}
           onGameOver={handleGameOver}
           onOpenShop={() => setShowCustomizer(true)}
           onQuitToLobby={() => {

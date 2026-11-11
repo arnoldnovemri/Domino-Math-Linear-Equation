@@ -435,6 +435,31 @@ export function unlockItem(itemId: string) {
   }
 }
 
+const UNLOCKED_THEMES_KEY = 'domino_math_unlocked_themes';
+
+export function getUnlockedThemes(): string[] {
+  try {
+    const raw = localStorage.getItem(UNLOCKED_THEMES_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return ['cyber-classroom']; // Default free theme
+}
+
+export function unlockTheme(themeId: string) {
+  const themes = getUnlockedThemes();
+  if (!themes.includes(themeId)) {
+    themes.push(themeId);
+    try {
+      localStorage.setItem(UNLOCKED_THEMES_KEY, JSON.stringify(themes));
+    } catch {}
+  }
+}
+
+export function isThemeUnlocked(themeId: string, cost: number): boolean {
+  if (cost === 0) return true;
+  return getUnlockedThemes().includes(themeId);
+}
+
 export function getUserStats(): UserStats {
   try {
     const raw = localStorage.getItem(STATS_KEY);

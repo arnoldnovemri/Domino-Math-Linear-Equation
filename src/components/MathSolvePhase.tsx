@@ -156,12 +156,12 @@ export const MathSolvePhase: React.FC<Props> = ({
     );
   };
 
-  // Skip All Equations by Exchanging 500 Coins
+  // Skip All Equations by Exchanging 600 Coins
   const handleSkipWithCoins = () => {
-    if (coins >= 500) {
+    if (coins >= 600) {
       sounds.playCoin();
       sounds.playExclusiveSparkle();
-      const updatedCoins = addCoins(-500);
+      const updatedCoins = addCoins(-600);
       setCoins(updatedCoins);
 
       const allSolvedCards = cards.map((c) => ({
@@ -173,12 +173,12 @@ export const MathSolvePhase: React.FC<Props> = ({
       setCards(allSolvedCards);
       setErrorFeedback(null);
       setHint(null);
-      setCoinNotification('-500 Koin (Buka Instan Sukses!)');
+      setCoinNotification('-600 Koin (Buka Instan Sukses!)');
       setTimeout(() => setCoinNotification(null), 3000);
     } else {
       sounds.playWrongBuzz();
       setErrorFeedback(
-        `Koin tidak mencukupi untuk skip! Kamu membutuhkan 500 koin (Koinmu saat ini: ${coins} koin). Selesaikan persamaan manual atau menangkan koin di mini game kucing!`
+        `Koin tidak mencukupi untuk skip! Kamu membutuhkan 600 koin (Koinmu saat ini: ${coins} koin). Selesaikan persamaan manual atau menangkan koin di mini game kucing!`
       );
     }
   };
@@ -199,16 +199,16 @@ export const MathSolvePhase: React.FC<Props> = ({
             <span>{coins} Koin</span>
           </div>
 
-          {/* 500 Coins Skip Option Button */}
+          {/* 600 Coins Skip Option Button */}
           {!allSolved && (
             <button
               type="button"
               onClick={handleSkipWithCoins}
               className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-gradient-to-r from-amber-500/25 to-yellow-500/25 hover:from-amber-500/35 hover:to-yellow-500/35 border border-amber-500/60 text-amber-300 text-xs font-black shadow-md shadow-amber-500/15 transition-transform hover:scale-105 active:scale-95 cursor-pointer"
-              title="Tukar 500 Koin untuk langsung membuka seluruh 7 kartu domino tanpa menghitung manual"
+              title="Tukar 600 Koin untuk langsung membuka seluruh 7 kartu domino tanpa menghitung manual"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-spin" />
-              <span>Buka Semua Kartu (Tukar 500 Koin)</span>
+              <span>Buka Semua Kartu (Tukar 600 Koin)</span>
             </button>
           )}
         </div>

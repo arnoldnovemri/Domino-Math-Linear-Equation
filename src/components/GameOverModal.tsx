@@ -242,10 +242,13 @@ export const GameOverModal: React.FC<Props> = ({
                     </div>
                   </div>
 
-                  {/* Silver Pillar */}
+                  {/* Silver Pillar with +150 Coins */}
                   <div className="w-full h-24 md:h-28 mt-2 rounded-t-2xl bg-gradient-to-b from-slate-400 via-slate-500 to-slate-700 border-t-2 border-x-2 border-slate-300 shadow-xl flex flex-col items-center justify-center text-slate-950 font-black font-fun">
                     <span className="text-2xl md:text-3xl">#2</span>
                     <span className="text-[10px] tracking-wider uppercase opacity-90">Juara 2</span>
+                    <span className="mt-0.5 text-[10px] font-mono font-black text-amber-200 bg-black/40 px-2 py-0.5 rounded-full">
+                      +150 Koin
+                    </span>
                   </div>
                 </div>
               )}
@@ -275,11 +278,14 @@ export const GameOverModal: React.FC<Props> = ({
                     </div>
                   </div>
 
-                  {/* Gold Pillar */}
+                  {/* Gold Pillar with +250 Coins */}
                   <div className="w-full h-32 md:h-36 mt-2 rounded-t-2xl bg-gradient-to-b from-amber-300 via-yellow-400 to-amber-600 border-t-2 border-x-2 border-yellow-200 shadow-2xl flex flex-col items-center justify-center text-slate-950 font-black font-fun ring-2 ring-amber-400/50">
                     <Trophy className="w-6 h-6 mb-1 text-slate-950 fill-current" />
                     <span className="text-3xl md:text-4xl">#1</span>
                     <span className="text-xs tracking-wider uppercase font-black">JUARA 1</span>
+                    <span className="mt-1 text-xs font-mono font-black text-amber-950 bg-yellow-200 px-2.5 py-0.5 rounded-full shadow-xs">
+                      +250 Koin
+                    </span>
                   </div>
                 </div>
               )}
@@ -306,33 +312,67 @@ export const GameOverModal: React.FC<Props> = ({
                     </div>
                   </div>
 
-                  {/* Bronze Pillar */}
+                  {/* Bronze Pillar with +75 Coins */}
                   <div className="w-full h-18 md:h-22 mt-2 rounded-t-2xl bg-gradient-to-b from-amber-700 via-amber-800 to-amber-950 border-t-2 border-x-2 border-amber-600 shadow-xl flex flex-col items-center justify-center text-amber-200 font-black font-fun">
                     <span className="text-2xl md:text-3xl">#3</span>
                     <span className="text-[10px] tracking-wider uppercase opacity-90">Juara 3</span>
+                    <span className="mt-0.5 text-[10px] font-mono font-black text-amber-300 bg-black/40 px-2 py-0.5 rounded-full">
+                      +75 Koin
+                    </span>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* 4th Place Honorable Mention (if 4 players) */}
+            {/* 4th Place Honorable Mention (0 Coins Reward) */}
             {rankedPlayers[3] && (
-              <div className="w-full max-w-sm mx-auto p-2 bg-slate-950/70 border border-slate-800 rounded-xl flex items-center justify-between text-xs text-slate-400 px-3">
+              <div className="w-full max-w-sm mx-auto p-2.5 bg-slate-950/70 border border-slate-800 rounded-xl flex items-center justify-between text-xs text-slate-400 px-3">
                 <span className="flex items-center gap-1.5">
                   <span className="font-bold text-slate-500">#4</span>
                   <span className="text-slate-300 font-semibold">{rankedPlayers[3].name}</span>
                 </span>
-                <span className="text-[11px]">Sisa: {rankedPlayers[3].cards.length} kartu</span>
+                <span className="text-[11px] font-mono bg-rose-950/50 text-rose-300 px-2 py-0.5 rounded-full border border-rose-800/40">
+                  0 Koin (Juara 4 Tidak Dapat Koin)
+                </span>
               </div>
             )}
 
-            {/* Winner Rewards Banner */}
-            {isUserWinner && (
-              <div className="flex items-center justify-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-amber-500/20 border border-amber-500/50 text-amber-300 font-black text-xs md:text-sm shadow-md">
-                <Coins className="w-5 h-5 text-amber-400" />
-                <span>Hadiah Kemenangan: +200 Koin &amp; +35 MMR Peringkat Global!</span>
-              </div>
-            )}
+            {/* Rank-Based User Rewards Banner */}
+            {(() => {
+              const userIdx = rankedPlayers.findIndex((p) => p.type === 'human');
+              const userRank = userIdx !== -1 ? userIdx + 1 : 4;
+              const rewardCoins =
+                userRank === 1 ? 250 : userRank === 2 ? 150 : userRank === 3 ? 75 : 0;
+
+              return (
+                <div
+                  className={`flex flex-col sm:flex-row items-center justify-between gap-2 p-3 rounded-2xl border ${
+                    rewardCoins > 0
+                      ? 'bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-amber-500/20 border-amber-500/50 text-amber-300'
+                      : 'bg-slate-900/80 border-slate-700 text-slate-400'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 font-bold text-xs md:text-sm">
+                    <Coins className="w-5 h-5 text-amber-400 shrink-0" />
+                    <span>
+                      Hasil Akhir Kamu: <strong className="text-white">Juara {userRank}</strong>
+                    </span>
+                  </div>
+
+                  <div className="text-xs font-black">
+                    {rewardCoins > 0 ? (
+                      <span className="px-3 py-1 bg-amber-500 text-slate-950 rounded-xl font-mono shadow-md">
+                        Hadiah Peringkat: +{rewardCoins} Koin 🪙
+                      </span>
+                    ) : (
+                      <span className="px-3 py-1 bg-slate-800 text-rose-300 rounded-xl font-mono border border-rose-900/50">
+                        Peringkat 4: 0 Koin (Belum Dapat Hadiah)
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Action Row */}
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-2">

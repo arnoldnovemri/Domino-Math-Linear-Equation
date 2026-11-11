@@ -1,27 +1,34 @@
 import React from 'react';
 import { ArenaTheme } from '../types/themes';
+import { Lock, Coins } from 'lucide-react';
 
 interface Props {
   theme: ArenaTheme;
   isSelected?: boolean;
+  isUnlocked?: boolean;
   onClick?: () => void;
+  onBuy?: () => void;
   size?: 'sm' | 'md' | 'lg';
 }
 
 export const ArenaVisualCard: React.FC<Props> = ({
   theme,
   isSelected = false,
+  isUnlocked = true,
   onClick,
+  onBuy,
   size = 'md',
 }) => {
   return (
     <div
-      onClick={onClick}
+      onClick={isUnlocked ? onClick : onBuy}
       className={`group relative rounded-3xl overflow-hidden cursor-pointer transition-all duration-300 border-2 select-none flex flex-col ${
         isSelected
           ? 'border-cyan-400 ring-4 ring-cyan-400/30 scale-[1.02] shadow-2xl shadow-cyan-500/25'
-          : 'border-slate-800 hover:border-slate-600 hover:scale-[1.01] shadow-xl'
-      } ${size === 'lg' ? 'h-80 md:h-96' : 'h-64'}`}
+          : isUnlocked
+          ? 'border-slate-800 hover:border-slate-600 hover:scale-[1.01] shadow-xl'
+          : 'border-slate-800/80 opacity-90 hover:border-amber-500/50 hover:scale-[1.01] shadow-lg'
+      } ${size === 'lg' ? 'h-80 md:h-96' : 'h-72'}`}
     >
       {/* Visual Panorama Artwork Canvas */}
       <div className="relative w-full flex-1 overflow-hidden">
@@ -29,36 +36,67 @@ export const ArenaVisualCard: React.FC<Props> = ({
         {theme.id === 'sakura-garden' && <SakuraGardenArtwork />}
         {theme.id === 'neon-cosmos' && <NeonCosmosArtwork />}
         {theme.id === 'ancient-library' && <AncientLibraryArtwork />}
+        {theme.id === 'golden-pyramid' && <GoldenPyramidArtwork />}
+        {theme.id === 'royal-palace' && <RoyalPalaceArtwork />}
 
         {/* Top Tag & Badge */}
         <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-950/80 backdrop-blur-md border border-white/20 text-xs font-bold text-white shadow-md">
           <span>{theme.badge}</span>
         </div>
 
-        {/* Selected Tick Indicator */}
-        {isSelected && (
+        {/* Top Right: Selected Tick or Price Tag */}
+        {isSelected ? (
           <div className="absolute top-3 right-3 z-10 w-7 h-7 rounded-full bg-cyan-400 text-slate-950 font-black flex items-center justify-center text-sm shadow-lg animate-bounce">
             ✓
+          </div>
+        ) : !isUnlocked ? (
+          <div className="absolute top-3 right-3 z-10 flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/90 text-slate-950 font-black text-xs shadow-lg backdrop-blur-xs">
+            <Lock className="w-3.5 h-3.5" />
+            <span>{theme.cost} Koin</span>
+          </div>
+        ) : theme.cost > 0 ? (
+          <div className="absolute top-3 right-3 z-10 flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/30 text-emerald-300 font-bold text-[10px] border border-emerald-500/40 backdrop-blur-xs">
+            <span>Dimiliki</span>
+          </div>
+        ) : null}
+
+        {/* Locked Overlay with Buy Button */}
+        {!isUnlocked && (
+          <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-[2px] flex flex-col items-center justify-center p-3 z-10">
+            <div className="w-10 h-10 rounded-full bg-amber-500/20 border border-amber-500/50 flex items-center justify-center text-amber-400 mb-2">
+              <Lock className="w-5 h-5" />
+            </div>
+            <span className="text-xs font-bold text-white mb-2">Arena Terkunci</span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onBuy) onBuy();
+              }}
+              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 font-black font-fun text-xs flex items-center gap-1.5 shadow-lg shadow-amber-500/30 transition-transform active:scale-95 cursor-pointer"
+            >
+              <Coins className="w-3.5 h-3.5" />
+              <span>Beli ({theme.cost} Koin)</span>
+            </button>
           </div>
         )}
       </div>
 
       {/* Card Info Details Footer */}
-      <div className="p-4 bg-slate-900/95 border-t border-slate-800 flex flex-col justify-between backdrop-blur-md">
+      <div className="p-3.5 bg-slate-900/95 border-t border-slate-800 flex flex-col justify-between backdrop-blur-md">
         <div>
-          <h4 className="font-bold text-base md:text-lg font-fun text-white flex items-center justify-between">
-            <span>{theme.name}</span>
-            <span className="text-xs font-sans text-cyan-400 font-normal">
-              {isSelected ? 'Dipilih' : 'Klik untuk Pilih'}
+          <h4 className="font-bold text-sm md:text-base font-fun text-white flex items-center justify-between">
+            <span className="truncate">{theme.name}</span>
+            <span className="text-xs font-sans text-cyan-400 font-normal shrink-0 ml-1">
+              {isSelected ? 'Dipilih' : isUnlocked ? 'Pilih' : 'Terkunci'}
             </span>
           </h4>
-          <p className="text-xs text-slate-300 mt-1 line-clamp-2">
+          <p className="text-xs text-slate-300 mt-0.5 line-clamp-1">
             {theme.description}
           </p>
         </div>
 
         {/* Particles preview */}
-        <div className="flex items-center gap-2 mt-3 pt-2 border-t border-slate-800/80 text-xs text-slate-400">
+        <div className="flex items-center gap-2 mt-2 pt-1.5 border-t border-slate-800/80 text-xs text-slate-400">
           <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
             Atmosfer:
           </span>
@@ -282,3 +320,95 @@ const AncientLibraryArtwork: React.FC = () => {
     </div>
   );
 };
+
+/**
+ * 5. Piramida Pythagoras Emas (Golden Pyramid) Visual Illustration
+ */
+const GoldenPyramidArtwork: React.FC = () => {
+  return (
+    <div className="w-full h-full relative bg-gradient-to-b from-[#180d00] via-[#331a00] to-[#0c0600] overflow-hidden flex items-center justify-center">
+      {/* Golden Ray Beams */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-400/20 via-transparent to-transparent pointer-events-none" />
+
+      {/* Floating 3D Gold Pyramid with Glowing Apex */}
+      <div className="relative z-10 flex flex-col items-center animate-float">
+        {/* Glowing Rubis Apex */}
+        <div className="w-4 h-4 rounded-full bg-rose-500 shadow-[0_0_20px_rgba(244,63,94,1)] animate-pulse -mb-1 z-20" />
+
+        {/* Isometric Pyramid Faces */}
+        <div className="flex">
+          <div className="w-0 h-0 border-r-[45px] border-r-amber-400 border-b-[80px] border-b-transparent shadow-lg" />
+          <div className="w-0 h-0 border-l-[45px] border-l-amber-600 border-b-[80px] border-b-transparent shadow-lg" />
+        </div>
+
+        {/* Triangle / Pythagorean Formula */}
+        <div className="mt-2 text-[10px] font-mono text-amber-300 font-extrabold tracking-widest bg-black/60 px-2 py-0.5 rounded-full border border-amber-500/50">
+          a² + b² = c²
+        </div>
+      </div>
+
+      {/* Floating Jewels & Math Sparkles */}
+      <div className="absolute top-4 left-6 text-base text-yellow-300 animate-bounce">
+        💎
+      </div>
+      <div className="absolute top-8 right-8 text-sm text-amber-400 animate-pulse">
+        📐
+      </div>
+      <div className="absolute bottom-6 left-10 text-sm text-yellow-400 animate-float">
+        ✨
+      </div>
+      <div className="absolute bottom-5 right-6 text-base text-amber-200 animate-bounce" style={{ animationDelay: '0.8s' }}>
+        👑
+      </div>
+    </div>
+  );
+};
+
+/**
+ * 6. Kasino Monte Carlo VIP (Royal Palace) Visual Illustration
+ */
+const RoyalPalaceArtwork: React.FC = () => {
+  return (
+    <div className="w-full h-full relative bg-gradient-to-b from-[#021f14] via-[#064e3b] to-[#01140c] overflow-hidden flex items-center justify-center">
+      {/* Emerald Velvet Table Surface Glow */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,_rgba(52,211,153,0.3),_transparent_70%)] pointer-events-none" />
+
+      {/* Royal Chandelier Silhouette & Gold Trim */}
+      <div className="absolute top-0 inset-x-0 h-6 flex justify-around items-center border-b border-amber-500/30 bg-black/30">
+        <span className="text-amber-400 text-xs">⚜️</span>
+        <span className="text-amber-300 text-sm">✨</span>
+        <span className="text-amber-400 text-xs">⚜️</span>
+      </div>
+
+      {/* Center Grand Roulette / Casino Crest */}
+      <div className="relative z-10 flex flex-col items-center">
+        <div className="w-20 h-20 rounded-full border-4 border-amber-400/90 bg-emerald-950/80 shadow-[0_0_25px_rgba(52,211,153,0.5)] flex items-center justify-center relative overflow-hidden">
+          {/* Inner Golden Star */}
+          <span className="text-2xl animate-spin" style={{ animationDuration: '8s' }}>
+            🎲
+          </span>
+          <div className="absolute inset-1 rounded-full border border-dashed border-amber-300/60" />
+        </div>
+
+        <div className="mt-2 text-[10px] font-mono text-emerald-200 font-bold uppercase tracking-wider bg-black/70 px-2.5 py-0.5 rounded-full border border-emerald-500/40">
+          Monte Carlo Grand VIP
+        </div>
+      </div>
+
+      {/* Floating Casino Chips & Diamonds */}
+      <div className="absolute top-8 left-8 text-sm text-amber-300 animate-float">
+        🪙
+      </div>
+      <div className="absolute bottom-6 left-6 text-sm text-emerald-300 animate-bounce">
+        💎
+      </div>
+      <div className="absolute top-7 right-8 text-sm text-amber-300 animate-float" style={{ animationDelay: '1s' }}>
+        🍾
+      </div>
+      <div className="absolute bottom-6 right-8 text-sm text-yellow-300 animate-bounce" style={{ animationDelay: '0.6s' }}>
+        ✨
+      </div>
+    </div>
+  );
+};
+

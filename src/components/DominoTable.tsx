@@ -28,6 +28,7 @@ interface Props {
   players: Player[];
   theme: ArenaTheme;
   difficulty: 'easy' | 'medium' | 'hard';
+  gameMode?: 'ai' | 'multiplayer';
   onGameOver: (winner: Player, updatedPlayers: Player[], isDeadlock: boolean) => void;
   onOpenShop: () => void;
   onQuitToLobby: () => void;
@@ -54,6 +55,7 @@ export const DominoTable: React.FC<Props> = ({
   players: initialPlayers,
   theme,
   difficulty,
+  gameMode = 'ai',
   onGameOver,
   onOpenShop,
   onQuitToLobby,
@@ -295,8 +297,8 @@ export const DominoTable: React.FC<Props> = ({
             setTimeout(() => {
               setShowCatMiniGame(true);
             }, 800);
-          } else {
-            // Multiplayer rule: Bot / opponent plays mini game, other players must wait!
+          } else if (gameMode === 'multiplayer') {
+            // Multiplayer rule only: opponent plays mini game, other players must wait!
             setOpponentWaitingMiniGame({
               name: targetP.name,
               countdown: 10,
@@ -641,6 +643,33 @@ export const DominoTable: React.FC<Props> = ({
   const ends = getOpenEnds();
   const humanHasPlayable = humanPlayer?.cards.some((c) => canPlayCard(c));
 
+  // Dynamic Casino Dealer turn instruction helper
+  const getCroupierInstruction = () => {
+    if (matchEndState) {
+      return 'Pertandingan berakhir! Semua pemain membuka sisa kartu di meja. Menyiapkan upacara podium 3D...';
+    }
+    if (opponentWaitingMiniGame) {
+      return `${opponentWaitingMiniGame.name} sedang berada di ruang bonus kucing... Mohon tunggu sejenak!`;
+    }
+    if (isHumanTurn) {
+      if (boardChain.length === 0) {
+        return 'Giliran Anda! Tarik kartu pertama dari tangan ke tengah meja untuk memulai putaran.';
+      }
+      if (!humanHasPlayable) {
+        return 'Tidak ada angka kartu yang cocok di meja! Silakan tekan tombol Lewat (Pass).';
+      }
+      return `Giliran Anda! Tarik kartu domino dengan angka ${ends?.leftEnd} atau ${ends?.rightEnd} ke sisi meja yang cocok.`;
+    }
+    const currentBot = players[activeTurnIdx];
+    if (currentBot) {
+      if (currentBot.isPassed) {
+        return `${currentBot.name} tidak memiliki kartu cocok dan telah melewati (pass) giliran.`;
+      }
+      return `${currentBot.name} sedang memikirkan strategi dan menghitung persamaan aljabar...`;
+    }
+    return 'Permainan domino matematika sedang berlangsung.';
+  };
+
   return (
     <div
       className={`relative w-full h-full min-h-[92vh] flex flex-col justify-between overflow-hidden bg-gradient-to-b ${theme.bgGradient} p-2 md:p-3 select-none`}
@@ -714,6 +743,27 @@ export const DominoTable: React.FC<Props> = ({
             <Pause className="w-4 h-4 text-amber-400" />
             <span className="hidden sm:inline">Jeda &amp; Skin</span>
           </button>
+        </div>
+      </div>
+
+      {/* PERSISTENT CASINO DEALER INSTRUCTION WIDGET (ALWAYS VISIBLE UNTIL GAME ENDS) */}
+      <div className="w-full max-w-2xl mx-auto z-20 my-0.5 flex items-center gap-2.5 px-3 py-1.5 rounded-2xl bg-slate-950/90 border border-amber-500/50 shadow-xl backdrop-blur-md">
+        <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-amber-400 shrink-0 shadow-md">
+          <img
+            src={casinoDealerImg}
+            alt="Croupier Kasino"
+            className="w-full h-full object-cover object-top"
+          />
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-black uppercase text-amber-400 tracking-wider">
+              Asisten Croupier Kasino:
+            </span>
+          </div>
+          <p className="text-xs text-amber-100 font-semibold truncate leading-tight">
+            {getCroupierInstruction()}
+          </p>
         </div>
       </div>
 
@@ -995,14 +1045,8 @@ export const DominoTable: React.FC<Props> = ({
               </div>
             </div>
 
-            <div className="mt-1.5 p-1.5 bg-slate-900 rounded-xl border border-slate-800 text-[10px] text-slate-300 font-semibold text-center leading-tight">
-              {matchEndState
-                ? 'Semua pemain silakan buka sisa kartu di meja! 🀄'
-                : opponentWaitingMiniGame
-                ? 'Pemain sedang di ruang bonus kucing... 🐾'
-                : isHumanTurn
-                ? 'Giliran Anda, letakkan kartu yang cocok 🎲'
-                : 'Pemain sedang memikirkan langkah aljabar... 💭'}
+            <div className="mt-1.5 p-1.5 bg-slate-900 rounded-xl border border-slate-800 text-[10px] text-amber-200 font-semibold text-center leading-tight">
+              {getCroupierInstruction()}
             </div>
           </div>
 
@@ -1017,17 +1061,44 @@ export const DominoTable: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Human Player Hand Area (Bottom) with FIRST PERSON 3D VIEW */}
-      <div className="w-full bg-slate-950/95 border border-slate-800 rounded-3xl p-3 backdrop-blur-md z-20 flex flex-col items-center gap-1.5 shadow-2xl relative">
-        {/* FIRST PERSON VIEW 3D ARMS & HANDS REACHING ONTO TABLE */}
-        <div className="w-full -mt-2">
-          <PlayerFirstPerson3D
-            avatar={humanPlayer.avatar}
-            isHumanTurn={isHumanTurn}
-            isDragging={!!draggedCard}
-            className="w-full h-16 md:h-20"
-          />
+      {/* Human Player Hand Area (Bottom) with FIRST PERSON 3D VIEW & HUMAN 3D AVATAR POD */}
+      <div className="w-full bg-slate-950/95 border border-slate-800 rounded-3xl p-2.5 md:p-3 backdrop-blur-md z-20 flex flex-col sm:flex-row items-center gap-3 shadow-2xl relative">
+        {/* HUMAN PLAYER'S FULL 3D AVATAR POD */}
+        <div className="flex flex-row sm:flex-col items-center justify-center p-2 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-cyan-500/60 shadow-xl w-full sm:w-36 md:w-40 shrink-0 relative overflow-hidden backdrop-blur-md">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 flex items-center justify-center relative">
+            <Avatar3DViewer
+              avatar={humanPlayer.avatar}
+              className="w-full h-full"
+              interactive={true}
+            />
+            {isHumanTurn && (
+              <div className="absolute inset-0 rounded-full ring-2 ring-cyan-400/80 animate-pulse pointer-events-none" />
+            )}
+          </div>
+          <div className="text-center sm:mt-1 ml-3 sm:ml-0 flex-1 sm:w-full">
+            <div className="font-black text-xs md:text-sm text-white truncate flex items-center justify-center gap-1">
+              <span>{humanPlayer.name}</span>
+              <span className="text-[9px] bg-cyan-400 text-slate-950 font-black px-1.5 py-0.2 rounded-full">
+                KAMU
+              </span>
+            </div>
+            <div className="text-[10px] text-cyan-300 font-semibold mt-0.5">
+              {humanPlayer.cards.length} Kartu di Tangan
+            </div>
+          </div>
         </div>
+
+        {/* CENTER / RIGHT: FIRST PERSON 3D ARMS & HAND CARDS */}
+        <div className="flex-1 w-full flex flex-col items-center gap-1.5">
+          {/* FIRST PERSON VIEW 3D ARMS & HANDS REACHING ONTO TABLE */}
+          <div className="w-full -mt-2">
+            <PlayerFirstPerson3D
+              avatar={humanPlayer.avatar}
+              isHumanTurn={isHumanTurn}
+              isDragging={!!draggedCard}
+              className="w-full h-16 md:h-20"
+            />
+          </div>
 
         {/* Hand Status Bar */}
         <div className="w-full flex items-center justify-between text-xs px-2">
@@ -1092,6 +1163,7 @@ export const DominoTable: React.FC<Props> = ({
             })
           )}
         </div>
+        </div>
       </div>
 
       {/* Cat Mini Game Modal (triggers when human reaches 3 cards, exactly 1 chance for 60s) */}
@@ -1133,8 +1205,43 @@ export const DominoTable: React.FC<Props> = ({
 };
 
 /**
+ * Visual fan of face-down domino tiles held in players' hands
+ */
+const OpponentHandCardsFan: React.FC<{ cardCount: number }> = ({ cardCount }) => {
+  if (cardCount <= 0) return null;
+  const count = Math.min(cardCount, 7);
+  return (
+    <div className="flex items-center justify-center -space-x-2 my-1 px-1 py-0.5 filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.6)]">
+      {Array.from({ length: count }).map((_, idx) => {
+        const offset = idx - (count - 1) / 2;
+        const rotateDeg = offset * 6;
+        const translateY = Math.abs(offset) * 2;
+        return (
+          <div
+            key={idx}
+            style={{
+              transform: `rotate(${rotateDeg}deg) translateY(${translateY}px)`,
+              transformOrigin: 'bottom center',
+            }}
+            className="w-4 h-7 md:w-5 md:h-8 rounded-[4px] bg-gradient-to-b from-[#343740] via-[#1c1e24] to-[#0c0d10] border border-[#4d5260] shadow-md flex flex-col items-center justify-center relative overflow-hidden transition-all duration-300 hover:scale-105"
+            title={`Memegang ${cardCount} kartu domino`}
+          >
+            {/* Center brass pin rivet */}
+            <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-tr from-amber-600 via-amber-300 to-yellow-100 border border-amber-700 shadow-xs z-10" />
+            {/* Dividing groove */}
+            <div className="absolute top-1/2 left-0 right-0 h-[1px] bg-[#424652]" />
+            {/* Embossed domino back texture lines */}
+            <div className="absolute inset-0.5 border border-dashed border-white/10 rounded-[2px] pointer-events-none" />
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+/**
  * Visual Pod for Player Avatars rendering FULL 3D CHARACTER MODEL with
- * dynamic expressions (Bingung, Marah, Senang) and Open Hand Cards on reveal!
+ * dynamic expressions (Bingung, Marah, Senang) and Cards Held in Hand!
  */
 const PlayerAvatarPod3D: React.FC<{
   player: Player;
@@ -1221,6 +1328,11 @@ const PlayerAvatarPod3D: React.FC<{
           </div>
         )}
       </div>
+
+      {/* VISUAL CARDS HELD IN HAND (FAN OF REALISTIC FACE-DOWN DOMINO TILES) */}
+      {!isRevealingAll && player.cards.length > 0 && (
+        <OpponentHandCardsFan cardCount={player.cards.length} />
+      )}
 
       {/* Name, Card Count, & 10s Reveal Display on Table */}
       <div className="text-center mt-0.5 w-full overflow-hidden">
