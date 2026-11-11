@@ -1,0 +1,6 @@
+{
+  "name": "Domino Math",
+  "description": "Game kartu domino multiplayer real-time berbasis matematika persamaan linear 1 variabel dengan kustomisasi avatar 3D, mini-game kucing, obrolan, dan sistem ranking global.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

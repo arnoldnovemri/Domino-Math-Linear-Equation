@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Outfit', sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+    overflow-x: hidden;
+    background-color: #0b0f19;
+    color: #f3f4f6;
+  }
+
+  h1, h2, h3, .font-fun {
+    font-family: 'Fredoka', cursive, sans-serif;
+  }
+}
+
+@keyframes fall {
+  0% {
+    transform: translateY(-120px) rotate(0deg) scale(0.9);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  85% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(105vh) rotate(360deg) scale(1.05);
+    opacity: 0;
+  }
+}
+
+.animate-falling-card {
+  animation: fall linear infinite;
+}
+
+@keyframes float-gentle {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(1deg); }
+}
+
+.animate-float {
+  animation: float-gentle 3.5s ease-in-out infinite;
+}
+
+@keyframes throwFromTop {
+  0% {
+    transform: translate(-50%, -80px) rotate(45deg) scale(0.6);
+    opacity: 0.2;
+  }
+  60% {
+    transform: translate(-50%, 40px) rotate(-15deg) scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, 70px) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-throwFromTop {
+  animation: throwFromTop 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes throwFromLeft {
+  0% {
+    transform: translate(-60px, -50%) rotate(-45deg) scale(0.6);
+    opacity: 0.2;
+  }
+  60% {
+    transform: translate(60px, -50%) rotate(15deg) scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(110px, -50%) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-throwFromLeft {
+  animation: throwFromLeft 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes throwFromRight {
+  0% {
+    transform: translate(60px, -50%) rotate(45deg) scale(0.6);
+    opacity: 0.2;
+  }
+  60% {
+    transform: translate(-60px, -50%) rotate(-15deg) scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-110px, -50%) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-throwFromRight {
+  animation: throwFromRight 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
+}
